@@ -210,6 +210,7 @@ torch.Size([1, 256, 56, 56])
 ## 目标检测
 
 ### NMS
+```
 def nms(self, bboxes, scores, thresh=0.5):
       x1 = bboxes[:,0]
       y1 = bboxes[:,1]
@@ -246,3 +247,4 @@ def nms(self, bboxes, scores, thresh=0.5):
         order = order[idx+1]
     # 返回保留下的所有边框的索引值，类型为torch.LongTensor
     return torch.LongTensor(keep)
+```
