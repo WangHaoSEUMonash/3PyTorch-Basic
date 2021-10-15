@@ -1,5 +1,106 @@
 # PyTorch-Basic
 
+## 第二章
+### 2.3 神经网络工具箱 torch.nn 
+#### 两个全连接层组成的感知机
+```
+import torch
+from torch import nn
+
+class Linear(nn.Module):
+    def __init__(self, in_dim, out_dim):
+        super(Linear, self).__init__()
+        self.w = nn.Parameter(torch.randn(in_dim, out_dim))
+        self.b = nn.Parameter(torch.randn(out_dim))
+
+    def forward(self, x):
+        x = x.matmul(self.w)
+        y = x + self.b.expand_as(x)
+        return y
+
+class Perception(nn.Module):
+    def __init__(self, in_dim, hid_dim, out_dim):
+        super(Perception, self).__init__()
+        self.layer1 = Linear(in_dim, hid_dim)
+        self.layer2 = Linear(hid_dim, out_dim)
+    def forward(self, x):
+        x = self.layer1(x)
+        y = torch.sigmoid(x)
+        y = self.layer2(y)
+        y = torch.sigmoid(y)
+        return y
+>>>import torch
+>>>from perception import Perception
+>>>perception=Perception(2, 3, 2)
+```
+#### nn.Sequential()快速搭建感知机
+```
+from torch import nn
+
+class Perception(nn.Module):
+    def __init__(self, in_dim, hid_dim, out_dim):
+        super(Perception, self).__init__()
+        self.layer = nn.Sequential(
+          nn.Linear(in_dim, hid_dim),
+          nn.Sigmoid(),
+          nn.Linear(hid_dim, out_dim),
+          nn.Sigmoid()
+)
+    def forward(self, x):
+        y = self.layer(x)
+        return y
+```
+#### 损失函数
+```
+>>> from torch import nn
+>>> import torch.nn.functional as F
+# 设置标签
+>>> label = torch.Tensor([0,1,1,0]).long()
+# 实例化nn中的交叉熵损失函数
+>>> criterion = nn.CrossEntropyLoss()
+# 调用交叉熵损失
+>>> loss_nn = criterion(output, label)
+
+# 由于F.cross_entropy是一个函数，可以直接调用，不需要实例化
+>>> loss_functional = F.cross_entropy(output, label) 
+```
+#### 优化器 nn.optim (3层感知机)
+```
+from torch import nn
+
+class MLP(nn.Module):
+    def __init__(self, in_dim, hid_dim1, hid_dim2, out_dim):
+        super(MLP, self).__init__()
+        self.layer = nn.Sequential(
+          nn.Linear(in_dim, hid_dim1),
+          nn.ReLU(),
+          nn.Linear(hid_dim1, hid_dim2),
+          nn.ReLU(),
+          nn.Linear(hid_dim2, out_dim),
+          nn.ReLU()
+       )
+    def forward(self, x):
+        x = self.layer(x)
+        return x
+        
+>>>from mlp import MLP
+>>>from torch import optim
+>>>from torch import nn
+>>>model = MLP(28*28, 300, 200, 10)
+>>>optimizer = optim.SGD(params = model.parameters(), lr=0.1)
+>>>data = torch.randn(10, 28*28)
+>>>output = model(data)
+>>>label = torch.Tensor([1,0,4,7,9,3,4,5,3,2])
+>>>criterion = nn.CrossEntropyLoss()
+>>>loss = criterion(output, label)
+#清空梯度，在每次优化前都需要进行此操作
+>>>optimizer.zero_grad()
+#损失反向传播
+>>>loss.backward()
+# 利用优化器进行梯度更新
+>>>optimizer.step()
+```
+
 ## 第三章
 ### 3.1 神经网络基本组成
 ***卷积层***
