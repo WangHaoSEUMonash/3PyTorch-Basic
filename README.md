@@ -234,9 +234,7 @@ torch.Size([1, 512, 7, 7])
 ```
 
 ### ResNet
-[**残差块**](https://zh-v2.d2l.ai/chapter_convolutional-modern/resnet.html)
-
-![avatar](https://zh-v2.d2l.ai/chapter_convolutional-modern/resnet.html#fig-residual-block)
+[**残差块**](https://zh-v2.d2l.ai/chapter_convolutional-modern/resnet.html) 
 ```
 import torch
 from torch.nn import nn
@@ -262,6 +260,10 @@ class Residual(nn.Module):
             X = self.conv3(X)
         Y += X
         return F.relu(Y)
+
+blk = Residual(3,3)
+X = torch.rand(4, 3, 6, 6)
+Y = blk(X)
 ```
 
 ***resnet_bottleneck.py***
@@ -412,3 +414,6 @@ box1 = [1,3,4,1]
 box2 = [2,4,5,2]
 print(IOU(box1,box2))
 ```
+
+### [锚框](https://zh-v2.d2l.ai/chapter_computer-vision/anchor.html)
+#### 生成多个锚框
