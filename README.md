@@ -343,46 +343,6 @@ torch.Size([1, 256, 56, 56])
 
 ## 目标检测
 
-### NMS
-```
-def nms(self, bboxes, scores, thresh=0.5):
-      x1 = bboxes[:,0]
-      y1 = bboxes[:,1]
-      x2 = bboxes[:,2]
-      y2 = bboxes[:,3]
-      # 计算每个box的面积
-      areas = (x2-x1+1)*(y2-y1+1) 
-      # 对得分进行降序排列，order为降序排列的索引
-      _, order = scores.sort(0, descending=True)
-      # keep保留了NMS留下的边框box
-      keep = []
-      while order.numel() > 0:
-            if order.numel() == 1:              # 保留框只剩一个
-                   i = order.item()
-                   keep.append(i)
-                   break
-        else:
-            i = order[0].item()                 # 保留scores最大的那个框box[i]
-            keep.append(i)
-        # 巧妙利用tensor.clamp函数求取每一个框与当前框的最大值和最小值
-        xx1 = x1[order[1:]].clamp(min=x1[i])
-        yy1 = y1[order[1:]].clamp(min=y1[i])
-        xx2 = x2[order[1:]].clamp(max=x2[i])
-        yy2 = y2[order[1:]].clamp(max=y2[i])
-        # 求取每一个框与当前框的重合部分面积
-        inter = (xx2-xx1).clamp(min=0) * (yy2-yy1).clamp(min=0)
-        # 计算每一个框与当前框的IoU
-        iou = inter / (areas[i]+areas[order[1:]]-inter)
-        # 保留IoU小于阈值的边框索引
-        idx = (iou <= threshold).nonzero().squeeze()
-        if idx.numel() == 0:
-                break
-        # 这里的+1是为了补充idx与order之间的索引差
-        order = order[idx+1]
-    # 返回保留下的所有边框的索引值，类型为torch.LongTensor
-    return torch.LongTensor(keep)
-```
-
 ### IoU
 
 ```
@@ -412,6 +372,42 @@ box1 = [1,3,4,1]
 box2 = [2,4,5,2]
 print(IOU(box1,box2))
 ```
+
+### NMS [(出处)](https://blog.csdn.net/a1103688841/article/details/89711120)
+```
+def nms(self, bboxes, scores, thresh=0.5):
+    x1, y1 = bboxes[:,0], bboxes[:,1]
+    x2, y2 = bboxes[:,2], bboxes[:,3]
+    areas = (y2-y1+1)*(x2-x1+1)
+    scores = bboxes[:,4]
+    
+    keep = []
+    index = scores.argsort()[::-1]
+    
+    while index.size > 0:
+        i = index[0] # 取出第一个方框进行和其他方框比对，看看有没有合并，第一个总是最大的
+        
+        keep.append(i) # keep保留的是索引值，不是分数
+        # 计算交集的左上角和右下角
+        x_lt, y_lt = np.maximum(x1[i], x1[index[1:]]), np.maximum(y1[i], y1[index[1:]])
+        x_rb, y_rb = np.minimum(x2[i], x2[index[1:]]), np.minimum(y2[i], y2[index[1:]])
+        
+        # 如果两个方框相交，x_rb-x_lt和y_rb-y_lt是正的，如果两个方框不相交，x_rb-x_lt和y_rb-y_lt是负的，我们把不相交的W和H设为0.
+        w, h = np.maximum(0, x_rb-x_lt+1), np.maximum(0, y_rb-y_lt+1)
+        overlaps = w * h
+        IoU = overlaps / (areas[i] + areas[index[1:]] - overlaps)
+        
+        # 接下来是合并重叠度最大的方框，也就是合并ious中值大于thresh的方框，合并这些方框只保留下分数最高的。经过排序当前我们操作的方框就是分数最高的，所以剔除其他和当前重叠度最高的方框
+        idx = np.where(IoU <= thresh)[0]
+        
+        #把留下来框在进行NMS操作，这边留下的框是去除当前操作的框，和当前操作的框重叠度大于thresh的框，每一次都会先去除当前操作框，所以索引的列表就会向前移动移位，要还原就+1，向后移动一位
+        index = index[idx+1]
+    
+    return keep
+  
+```
+
+
 
 ### [锚框](https://zh-v2.d2l.ai/chapter_computer-vision/anchor.html)
 #### 生成多个锚框
