@@ -1,5 +1,30 @@
 # PyTorch-Basic
 
+## Numpy实现卷积和池化
+### 卷积
+#### 没有padding
+```
+import numpy as np
+
+def numpy_conv(image, filter):
+    H, W = image.shape
+    h_k, w_k= filter.shape
+    
+    h_new, w_new = H - h_k + 1, W - w_k + 1 
+    result = np.zeros((h_new, w_new))
+    
+    for row in range(0, h_new, 1):
+        for col in range(0, w_new, 1):
+            # 池化大小的输入区域
+            cur_input = image[row:row+h_k, col:col+w_k]
+            #和核进行乘法计算
+            cur_output = cur_input * filter
+            #再把所有值求和
+            conv_sum = np.sum(cur_output)
+            #当前点输出值
+            result[row, col] = conv_sum
+    return result  
+```
 
 ## 第二章
 ### 2.3 神经网络工具箱 torch.nn 
