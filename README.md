@@ -395,12 +395,12 @@ def nms(self, bboxes, scores, thresh=0.5):
         # 如果两个方框相交，x_rb-x_lt和y_rb-y_lt是正的，如果两个方框不相交，x_rb-x_lt和y_rb-y_lt是负的，我们把不相交的W和H设为0.
         w, h = np.maximum(0, x_rb-x_lt+1), np.maximum(0, y_rb-y_lt+1)
         overlaps = w * h
-        IoU = overlaps / (areas[i] + areas[index[1:]] - overlaps)
+        IoUs = overlaps / (areas[i] + areas[index[1:]] - overlaps)
         
-        # 接下来是合并重叠度最大的方框，也就是合并ious中值大于thresh的方框，合并这些方框只保留下分数最高的。经过排序当前我们操作的方框就是分数最高的，所以剔除其他和当前重叠度最高的方框
-        idx = np.where(IoU <= thresh)[0]
+        # 接下来是合并重叠度最大的方框，也就是合IoUs中值大于thresh的方框，合并这些方框只保留下分数最高的。经过排序当前我们操作的方框就是分数最高的，所以剔除其他和当前重叠度最高的方框
+        idx = np.where(IoUs <= thresh)[0]
         
-        #把留下来框在进行NMS操作，这边留下的框是去除当前操作的框，和当前操作的框重叠度大于thresh的框，每一次都会先去除当前操作框，所以索引的列表就会向前移动移位，要还原就+1，向后移动一位
+        #把留下来框在进行NMS操作，留下的框是去除当前操作的框，和当前操作的框重叠度大于thresh的框，每一次都会先去除当前操作框，所以索引的列表就会向前移动移位，要还原就+1，向后移动一位
         index = index[idx+1]
     
     return keep
